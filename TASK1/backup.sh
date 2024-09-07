@@ -6,6 +6,7 @@ REMOTE_USER="root"
 REMOTE_SERVER="192.168.190.154"
 REMOTE_DIR="/project/db_backup"
 REMOTE_PATH="${REMOTE_DIR}/$(date +%F_%H-%M)_db.sqlite3"
+CRON_PATH="/tmp/backup.sh"
 
 # Функция для копирования базы данных
 backup_db() {
@@ -29,10 +30,10 @@ setup_cron() {
   echo "Настройка cron для выполнения бэкапов каждую неделю..."
 
   # Строка для добавления в cron
-  CRON_JOB="0 3 * * 1 /path/to/backup.sh -b >> /var/log/cron.log 2>&1"
+  CRON_JOB="0 3 * * 1 bash $CRON_PATH -b >> /var/log/cron.log 2>&1"
   
   # Добавляем задачу в cron (удаляем старую, если она была)
-  (crontab -l | grep -v "/path/to/backup.sh"; echo "$CRON_JOB") | crontab -
+  (crontab -l | grep -v "$CRON_PATH"; echo "$CRON_JOB") | crontab -
   if [[ $? -ne 0 ]]; then
     echo "Ошибка: не удалось настроить cron!"
     exit 1
