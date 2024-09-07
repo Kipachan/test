@@ -1,0 +1,2 @@
+---
+user_password: "{{ 'password' | password_hash('sha512') }}"

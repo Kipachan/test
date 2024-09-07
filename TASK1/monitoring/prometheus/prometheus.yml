@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 10s 
+
+scrape_configs:
+  - job_name: 'prometheus-container'
+    static_configs:
+      - targets: ["localhost:9090"]  
+        labels:
+          group: 'monitoring'
+
+  - job_name: 'server'
+    static_configs:
+      - targets: ["192.168.190.144:9100"]  
+        labels:
+          group: 'server'
+
+  - job_name: 'app'
+    static_configs:
+      - targets: ["app:8000"]  
+        labels:
+          group: 'app'
+

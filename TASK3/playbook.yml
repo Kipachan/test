@@ -1,0 +1,81 @@
+---
+- name: Setup server with Nginx, Python3, and user configuration
+  hosts: ubuntu_servers
+  become: true
+  gather_facts: false # Для поставленных задач факты не нужны. Отключим  их сбор, чтобы не нагружать сервер ненужной работой
+ 
+  vars_files:
+    - ./vars/vars.yml
+    - ./vault/vault.yml
+
+  tasks:
+
+    - name: Check if Python is installed
+      raw: "command -v python3 || command -v python || echo 'not_installed'" # Предполагается, что python не установлен, а значит модуль apt работать не будет. Используем raw
+      register: python_check                                                 
+      changed_when: false
+
+    - name: Update apt package list 
+      raw: sudo apt-get update 
+      when: "'not_installed' in python_check.stdout"
+
+    - name: Install Python on Ubuntu 
+      raw: apt-get install -y python3
+      when: "'not_installed' in python_check.stdout"
+      register: install_python_result
+
+    - name: Update apt package list  
+      apt:                           #Теперь python установлен на серверах и можно использовать модуль apt
+        update_cache: yes
+        cache_valid_time: 3600  
+
+    - name: Install Nginx and Pip
+      apt:
+        name:
+          - nginx
+          - python3-pip
+        state: present
+
+    - name: Ensure Nginx is started and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: true  
+
+    - name: Copy custom Nginx configuration
+      copy:
+        src: "{{ nginx_config_src }}"
+        dest: "{{ nginx_config_dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - Restart Nginx
+
+    - name: Copy index.html 
+      copy:
+        src: "{{ nginx_index_src }}"
+        dest: "{{ nginx_index_dest }}"
+        owner: www-data
+        group: www-data
+        mode: '0644'
+
+    - name: Create new user with sudo privileges
+      user:
+        name: "{{ new_user }}"
+        password: "{{ user_password }}"
+        state: present
+        groups: "{{ group }}"
+        append: yes
+        update_password: on_create 
+
+    - name: Upgrade all installed packages to the latest version
+      apt:
+        upgrade: dist  
+        update_cache: yes
+
+  handlers:               #Хэндлер сработает, только если мы поменяем конфигурационный файл nginx
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

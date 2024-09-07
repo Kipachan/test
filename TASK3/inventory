@@ -1,0 +1,2 @@
+[ubuntu_servers]
+AnUbuntu ansible_host=192.168.190.154 ansible_user: root ansible_ssh_private_key_file: /etc/ansible/ssh/id_rsa_ubuntu

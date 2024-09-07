@@ -1,0 +1,7 @@
+---
+nginx_config_src: "./files/default"
+nginx_config_dest: "/etc/nginx/sites-available/default"
+nginx_index_src: "./files/index.html"
+nginx_index_dest: "/var/www/html/index.html"
+new_user: "testuser"
+group: "sudo"
