@@ -1,0 +1,28 @@
+stages:
+  - scan
+
+variables:
+  API_URL: "https://demo.defectdojo.org/api/v2/engagements/${ENGAGEMENT_ID}/files/"
+  API_KEY: "548afd6fab3bea9794a41b31da0e9404f733e222"  
+  ENGAGEMENT_ID: 15  
+  FILENAME: "Nmap_Scan.xml" # Название загружаемого файла
+
+scan_job:
+  stage: scan
+  tags:
+      - stage #Тэг раннера, который будет выполнять скрипт ниже
+
+  script:
+    - apt-get update && apt-get install -y nmap curl jq
+    - nmap -sT scanme.nmap.org -oX nmap_report.xml
+    - echo "Nmap scan completed. Sending results to DefectDojo..."
+    
+    - |
+      curl -X POST "${API_URL}" \
+        -H "Authorization: Token ${API_KEY}" \
+        -F "id=${ENGAGEMENT_ID}" \
+        -F "file=@nmap_report.xml" \
+        -F "title=${FILENAME}" 
+
+
+  when: manual  # Добавлено, чтобы запускать джоб вручную
